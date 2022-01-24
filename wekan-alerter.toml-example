@@ -1,0 +1,8 @@
+MONGO = "mongodb://user:password@server:27017/"
+DB = "wekan-db"
+SMTPHOST = "mail.your.host"
+SMTPPORT = "25"
+SMTPFROM = "contact@signaux-faibles.beta.gouv.fr"
+TEMPLATE = "mail-html.tmpl"
+WHITELIST = ["one.user@somewhere", "another.one@somewhere.else"]
+

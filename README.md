@@ -6,7 +6,11 @@ wekan-alerter permet de synthétiser une journée d'activité et de l'envoyer pa
 go get github.com/signaux-faibles/wekan-alerter
 ```
 
+Créer le fichier `wekan-alerter.toml` en repartant du fichier exemple si besoin.
+
 ## Utilisation
 ```
-$GOPATH/bin/wekan-alerter --smtp smtp.host --port 25 --template template.html
+$GOPATH/bin/wekan-alerter
 ```
+
+Assurez vous que le fichier template et de configuration sont bien présents dans le répertoire où vous exécutez la commande.
