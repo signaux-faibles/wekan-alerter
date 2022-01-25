@@ -20,7 +20,7 @@ func main() {
 }
 
 func period() (time.Time, time.Time) {
-	today := time.Now().Truncate(24 * time.Hour)
-	yesterday := time.Now().Truncate(24 * time.Hour).Add(-24 * 30 * time.Hour)
+	today := time.Now()
+	yesterday := time.Now().Truncate(24 * time.Hour).Add(-24 * time.Hour)
 	return yesterday, today
 }

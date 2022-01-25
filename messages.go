@@ -29,6 +29,8 @@ var ACTIONS = map[string]string{
 	"moveCard":             "a déplacé la carte",
 }
 
+var MODIFS = []string{"editComment", "addComment"}
+
 type messages map[string][]activity
 
 type mail struct {
@@ -65,7 +67,6 @@ func loadMessages(activities []activity, users map[string]user) messages {
 		for _, member := range activity.Card.Members {
 			destinataires = append(destinataires, users[member].Services.OIDC.Email)
 		}
-
 		for _, destinataire := range destinataires {
 			if destinataire != "" {
 				activities := msgs[destinataire]
@@ -107,26 +108,28 @@ func includes(array []string, elem string) bool {
 
 func (m *mail) group(activities []activity, users map[string]user, boards map[string]board) {
 	for _, a := range activities {
-		boardInfo := m.Boards[a.BoardId]
-		boardInfo.Slug = boards[a.BoardId].Slug
-		boardInfo.Title = boards[a.BoardId].Title
-		boardInfo.Id = a.BoardId
-		if boardInfo.Cards == nil {
-			boardInfo.Cards = make(map[string]cardInfo)
+		if includes(MODIFS, a.ActivityType) && m.Destinataire != users[a.UserId].Services.OIDC.Email {
+			boardInfo := m.Boards[a.BoardId]
+			boardInfo.Slug = boards[a.BoardId].Slug
+			boardInfo.Title = boards[a.BoardId].Title
+			boardInfo.Id = a.BoardId
+			if boardInfo.Cards == nil {
+				boardInfo.Cards = make(map[string]cardInfo)
+			}
+			cardInfo := boardInfo.Cards[a.Card.ID]
+			user := userInfo{
+				Name:  users[a.UserId].Profile.Fullname,
+				Email: users[a.UserId].Services.OIDC.Email,
+			}
+			if cardInfo.Utilisateurs == nil {
+				cardInfo.Utilisateurs = make(map[userInfo]struct{})
+			}
+			cardInfo.Utilisateurs[user] = struct{}{}
+			cardInfo.Actions += 1
+			cardInfo.RaisonSociale = a.Card.Title
+			boardInfo.Cards[a.Card.ID] = cardInfo
+			m.Boards[a.BoardId] = boardInfo
 		}
-		cardInfo := boardInfo.Cards[a.Card.ID]
-		user := userInfo{
-			Name:  users[a.UserId].Profile.Fullname,
-			Email: users[a.UserId].Services.OIDC.Email,
-		}
-		if cardInfo.Utilisateurs == nil {
-			cardInfo.Utilisateurs = make(map[userInfo]struct{})
-		}
-		cardInfo.Utilisateurs[user] = struct{}{}
-		cardInfo.Actions += 1
-		cardInfo.RaisonSociale = a.Card.Title
-		boardInfo.Cards[a.Card.ID] = cardInfo
-		m.Boards[a.BoardId] = boardInfo
 	}
 }
 
@@ -136,6 +139,8 @@ func (m *mail) send() {
 	body.Write([]byte(fmt.Sprintf("Subject: Rapport d'activité Wekan \n%s\n\n", mimeHeaders)))
 	TEMPLATE.Execute(&body, m)
 	err := smtp.SendMail(SMTPHOST+":"+SMTPPORT, nil, SMTPFROM, []string{m.Destinataire}, body.Bytes())
+	// err := smtp.SendMail(SMTPHOST+":"+SMTPPORT, nil, SMTPFROM, []string{"christophe.ninucci@dreets.gouv.fr"}, body.Bytes())
+
 	if err != nil {
 		fmt.Println(err)
 		return

@@ -89,7 +89,6 @@ func lookupBoards(ctx context.Context, database *mongo.Database) map[string]boar
 
 func lookupUsers(ctx context.Context, database *mongo.Database) map[string]user {
 	var users []user
-
 	cursor, err := database.Collection("users").Find(ctx, bson.M{})
 	if err != nil {
 		panic(err)

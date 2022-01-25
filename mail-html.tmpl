@@ -9,14 +9,14 @@
       Bonjour,<br/>
       <br/>
       Cet email vous est envoyé automatiquement tous les matins pour vous présenter l'activité Wekan de la veille.<br/>
-      Ces notifications couvrent les cartes auxquelles vous participez au moment de l'envoi.
+      Ces notifications couvrent les ajouts de commentaires sur les cartes auxquelles vous participez.
       
       {{range $boardId, $board := .Boards}}
       <h3><a href="https://wekan.signaux-faibles.beta.gouv.fr/b/{{$board.Id}}/{{$board.Slug}}">{{$board.Title}}</a></h3>
         <ul>
         {{range $cardId, $card := $board.Cards}}
           <li><a href="https://wekan.signaux-faibles.beta.gouv.fr/b/{{$board.Id}}/{{$board.Slug}}/{{$cardId}}">{{$card.RaisonSociale}}</a></li>:
-          {{$card.Actions}} action(s)
+          {{$card.Actions}} commentaire(s).
             ({{range $user, $nil := $card.Utilisateurs}}
             <a href="mailto:{{$user.Email}}">{{$user.Name}}</a> 
             {{end}})
