@@ -88,9 +88,13 @@ func getMail(msgs messages, from time.Time, to time.Time, users map[string]user,
 			m.From = from
 			m.To = to
 			m.Boards = make(map[string]boardInfo)
-			m.group(messages, users, boards)
-			m.send()
-			fmt.Printf("envoi pour %s réalisé\n", m.Destinataire)
+			send := m.group(messages, users, boards)
+			if send {
+				m.send()
+				fmt.Printf("envoi pour %s réalisé\n", m.Destinataire)
+			} else {
+				fmt.Printf("pas d'envoi pour %s\n", m.Destinataire)
+			}
 			time.Sleep(5 * time.Second)
 		}
 	}
@@ -106,9 +110,11 @@ func includes(array []string, elem string) bool {
 	return false
 }
 
-func (m *mail) group(activities []activity, users map[string]user, boards map[string]board) {
+func (m *mail) group(activities []activity, users map[string]user, boards map[string]board) bool {
+	send := false
 	for _, a := range activities {
 		if includes(MODIFS, a.ActivityType) && m.Destinataire != users[a.UserId].Services.OIDC.Email {
+			send = true
 			boardInfo := m.Boards[a.BoardId]
 			boardInfo.Slug = boards[a.BoardId].Slug
 			boardInfo.Title = boards[a.BoardId].Title
@@ -131,6 +137,7 @@ func (m *mail) group(activities []activity, users map[string]user, boards map[st
 			m.Boards[a.BoardId] = boardInfo
 		}
 	}
+	return send
 }
 
 func (m *mail) send() {
@@ -139,8 +146,6 @@ func (m *mail) send() {
 	body.Write([]byte(fmt.Sprintf("Subject: Rapport d'activité Wekan \n%s\n\n", mimeHeaders)))
 	TEMPLATE.Execute(&body, m)
 	err := smtp.SendMail(SMTPHOST+":"+SMTPPORT, nil, SMTPFROM, []string{m.Destinataire}, body.Bytes())
-	// err := smtp.SendMail(SMTPHOST+":"+SMTPPORT, nil, SMTPFROM, []string{"christophe.ninucci@dreets.gouv.fr"}, body.Bytes())
-
 	if err != nil {
 		fmt.Println(err)
 		return
