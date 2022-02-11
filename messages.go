@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"net/smtp"
 	"time"
 )
 
@@ -82,7 +81,7 @@ func loadMessages(activities []activity, users map[string]user) messages {
 func getMail(msgs messages, from time.Time, to time.Time, users map[string]user, boards map[string]board) map[string]string {
 	var mails = make(map[string]string)
 	for destinataire, messages := range msgs {
-		if includes(WHITELIST, destinataire) {
+		if !includes(BLACKLIST, destinataire) {
 			var m mail
 			m.Destinataire = destinataire
 			m.From = from
@@ -113,7 +112,7 @@ func includes(array []string, elem string) bool {
 func (m *mail) group(activities []activity, users map[string]user, boards map[string]board) bool {
 	send := false
 	for _, a := range activities {
-		if includes(MODIFS, a.ActivityType) && m.Destinataire != users[a.UserId].Services.OIDC.Email {
+		if len(users[a.UserId].Emails) > 0 && includes(MODIFS, a.ActivityType) && m.Destinataire != users[a.UserId].Emails[0].Address {
 			send = true
 			boardInfo := m.Boards[a.BoardId]
 			boardInfo.Slug = boards[a.BoardId].Slug
@@ -125,7 +124,7 @@ func (m *mail) group(activities []activity, users map[string]user, boards map[st
 			cardInfo := boardInfo.Cards[a.Card.ID]
 			user := userInfo{
 				Name:  users[a.UserId].Profile.Fullname,
-				Email: users[a.UserId].Services.OIDC.Email,
+				Email: users[a.UserId].Emails[0].Address,
 			}
 			if cardInfo.Utilisateurs == nil {
 				cardInfo.Utilisateurs = make(map[userInfo]struct{})
@@ -145,9 +144,9 @@ func (m *mail) send() {
 	mimeHeaders := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
 	body.Write([]byte(fmt.Sprintf("Subject: Rapport d'activité Wekan \n%s\n\n", mimeHeaders)))
 	TEMPLATE.Execute(&body, m)
-	err := smtp.SendMail(SMTPHOST+":"+SMTPPORT, nil, SMTPFROM, []string{m.Destinataire}, body.Bytes())
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	// err := smtp.SendMail(SMTPHOST+":"+SMTPPORT, nil, SMTPFROM, []string{m.Destinataire}, body.Bytes())
+	// if err != nil {
+	// 	fmt.Println(err)
+	// 	return
+	// }
 }

@@ -13,7 +13,7 @@ var DB string
 var SMTPHOST string
 var SMTPPORT string
 var SMTPFROM string
-var WHITELIST []string
+var BLACKLIST []string
 var TEMPLATE *template.Template
 
 func loadConfig() {
@@ -30,7 +30,7 @@ func loadConfig() {
 	SMTPPORT = v.GetString("SMTPPORT")
 	SMTPFROM = v.GetString("SMTPFROM")
 	DB = v.GetString("DB")
-	WHITELIST = v.GetStringSlice("WHITELIST")
+	BLACKLIST = v.GetStringSlice("BLACKLIST")
 
 	var err error
 	TEMPLATE, err = template.New("mail").ParseFiles(v.GetString("TEMPLATE"))

@@ -43,6 +43,12 @@ type user struct {
 	Profile struct {
 		Fullname string `bson:"fullname"`
 	} `bson:"profile"`
+	Emails []userEmail `bson:"emails"`
+}
+
+type userEmail struct {
+	Address  string `bson:"address"`
+	Verified bool   `bson:"verified"`
 }
 
 func connect(ctx context.Context) *mongo.Database {
