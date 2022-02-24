@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"fmt"
+	"net/smtp"
 	"time"
 )
 
@@ -94,7 +95,7 @@ func getMail(msgs messages, from time.Time, to time.Time, users map[string]user,
 			} else {
 				fmt.Printf("pas d'envoi pour %s\n", m.Destinataire)
 			}
-			time.Sleep(5 * time.Second)
+			time.Sleep(3 * time.Second)
 		}
 	}
 	return mails
@@ -144,9 +145,9 @@ func (m *mail) send() {
 	mimeHeaders := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
 	body.Write([]byte(fmt.Sprintf("Subject: Rapport d'activité Wekan \n%s\n\n", mimeHeaders)))
 	TEMPLATE.Execute(&body, m)
-	// err := smtp.SendMail(SMTPHOST+":"+SMTPPORT, nil, SMTPFROM, []string{m.Destinataire}, body.Bytes())
-	// if err != nil {
-	// 	fmt.Println(err)
-	// 	return
-	// }
+	err := smtp.SendMail(SMTPHOST+":"+SMTPPORT, nil, SMTPFROM, []string{m.Destinataire}, body.Bytes())
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 }
