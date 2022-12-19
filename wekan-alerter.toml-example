@@ -4,5 +4,5 @@ SMTPHOST = "mail.your.host"
 SMTPPORT = "25"
 SMTPFROM = "contact@signaux-faibles.beta.gouv.fr"
 TEMPLATE = "mail-html.tmpl"
-WHITELIST = ["one.user@somewhere", "another.one@somewhere.else"]
+BLACKLIST = ["one.user@somewhere", "another.one@somewhere.else"]
 

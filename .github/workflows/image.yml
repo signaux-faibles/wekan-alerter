@@ -1,0 +1,65 @@
+name: CI v2
+
+on:
+  push:
+    branches:
+      - 'main'
+    tags:
+  release:
+    types: [published, edited]
+  pull_request:
+    branches:
+      - 'main'
+jobs:
+  build_wekan_alerter:
+    name: Build wekan-alerter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Set up Go 1.18
+        uses: actions/setup-go@v3
+        with:
+          go-version: 1.19.x
+        id: go
+      - name: Build package
+        run: go build -v .
+      - name: Unit Tests
+        run: go test ./...
+
+  container_wekan_alerter:
+    name: Push wekan-alerter container
+    needs: build_wekan_alerter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+      - name: Prepare container sources & resources
+        shell: bash
+        run: |
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+#            type=ref,event=branch
+            type=ref,event=tag
+            type=ref,event=pr
+          flavor: |
+            latest=true
+      - name: Login to GitHub Container Registry
+        id: login
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v3
+        with:
+          context: ./
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
