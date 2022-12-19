@@ -14,7 +14,9 @@ var SMTPHOST string
 var SMTPPORT string
 var SMTPFROM string
 var BLACKLIST []string
+var WHITELIST []string
 var TEMPLATE *template.Template
+var DRYRUN bool
 
 func loadConfig() {
 	v := viper.New()
@@ -31,10 +33,20 @@ func loadConfig() {
 	SMTPFROM = v.GetString("SMTPFROM")
 	DB = v.GetString("DB")
 	BLACKLIST = v.GetStringSlice("BLACKLIST")
+	WHITELIST = v.GetStringSlice("WHITELIST")
+	DRYRUN = v.GetBool("DRYRUN")
+
+	checkConfig()
 
 	var err error
 	TEMPLATE, err = template.New("mail").ParseFiles(v.GetString("TEMPLATE"))
 	if err != nil {
 		panic(err)
+	}
+}
+
+func checkConfig() {
+	if len(WHITELIST)*len(BLACKLIST) > 0 {
+		panic("WHITELIST et BLACKLIST sont mutuellement exclusives, vérifiez la configuration")
 	}
 }

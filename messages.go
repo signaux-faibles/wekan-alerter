@@ -82,7 +82,7 @@ func loadMessages(activities []activity, users map[string]user) messages {
 func getMail(msgs messages, from time.Time, to time.Time, users map[string]user, boards map[string]board) map[string]string {
 	var mails = make(map[string]string)
 	for destinataire, messages := range msgs {
-		if !includes(BLACKLIST, destinataire) {
+		if acceptDestinataire(destinataire) {
 			var m mail
 			m.Destinataire = destinataire
 			m.From = from
@@ -99,6 +99,10 @@ func getMail(msgs messages, from time.Time, to time.Time, users map[string]user,
 		}
 	}
 	return mails
+}
+
+func acceptDestinataire(destinataire string) bool {
+	return !includes(BLACKLIST, destinataire) || includes(WHITELIST, destinataire)
 }
 
 func includes(array []string, elem string) bool {
@@ -145,6 +149,10 @@ func (m *mail) send() {
 	mimeHeaders := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\n\n"
 	body.Write([]byte(fmt.Sprintf("Subject: Rapport d'activité Wekan \n%s\n\n", mimeHeaders)))
 	TEMPLATE.Execute(&body, m)
+	if DRYRUN {
+		fmt.Println(m.Destinataire, string(body.Bytes()))
+		return
+	}
 	err := smtp.SendMail(SMTPHOST+":"+SMTPPORT, nil, SMTPFROM, []string{m.Destinataire}, body.Bytes())
 	if err != nil {
 		fmt.Println(err)
