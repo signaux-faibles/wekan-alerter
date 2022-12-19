@@ -15,3 +15,5 @@
 # vendor/
 wekan-alerter.toml
 wekan-alerter
+
+.idea
